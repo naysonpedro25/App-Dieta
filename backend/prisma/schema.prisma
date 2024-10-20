@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        BigInt    @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  name      String    @db.VarChar(255)
+  sex       Sex
+  age       Int
+  objective Objective
+  height    Float
+  weight    Float
+  password  String    @db.VarChar(255)
+  email     String    @unique @db.VarChar(255)
+  updatedAt DateTime  @updatedAt
+  calories_goals Float
+  calories_consumed Float
+  calories_burned Float
+  meals     Meal[]
+}
+
+model Meal {
+  id       Int      @id @default(autoincrement())
+  user     User     @relation(fields: [userId], references: [id])
+  userId   BigInt
+  name     String // Nome da refeição, ex: "Café da manhã"
+  calories Float
+  date     DateTime @default(now())
+  foods    Food[] // Relacionamento com alimentos consumidos
+}
+
+model Food {
+  id            BigInt   @id @default(autoincrement())
+  Meal          Meal?    @relation(fields: [mealId], references: [id])
+  mealId        Int?
+  userId        BigInt   @unique
+  name          String   @db.VarChar(255)
+  calories      Float
+  carbohydrates Float
+  proteins      Float
+  fats          Float
+  createdAt     DateTime @default(now())
+}
+
+enum Sex {
+  MALE
+  FEMALE
+}
+
+enum Objective {
+  WEIGHT_LOSS
+  WEIGHT_GAIN
+  MAINTAIN
+}
