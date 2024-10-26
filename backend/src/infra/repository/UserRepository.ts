@@ -12,7 +12,6 @@ export class UserRepository{
     
     async createUser(dataUser : User): Promise<User> {
         return (await this.db.user.create({ data: dataUser }));
-        
     }
 
     async findUserByEmail(email: string): Promise<User | null >{

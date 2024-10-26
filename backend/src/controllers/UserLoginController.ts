@@ -1,8 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { UserRepository } from "../repository/UserRepository"
+import { UserRepository } from "../infra/repository/UserRepository"
 import { hash, genSalt, compare } from "bcrypt"
-
-
 export class UserLoginController {
     userRepo: UserRepository = new UserRepository();
 
@@ -19,16 +17,17 @@ export class UserLoginController {
             const salt = await genSalt(10);
             const hashPassword = await hash(password, salt);
 
-            if (!(await compare(password, hashPassword))) return res.status(401).send({ message: 'Invalid password' });
+            if (!(await compare(password, hashPassword))) {return res.status(401).send({ message: 'Invalid password' })};
 
             const accessToken = fastify.jwt.sign({ userId: user.id.toString(), email: user.email }, { expiresIn: '1h' });
             const refreshToken = fastify.jwt.sign({ userId: user.id.toString(), email: user.email }, { expiresIn: '7d' });
 
             return res.status(201).send({ message: "Login successfully", accessToken, refreshToken });
 
-        } catch (error) {
+        } catch (error){
             console.log("User login error : " , error);
-            return res.status(401).send({ message: 'Error: ', error });
+            res.status(401).send({ message: 'Error: ', error });
+
         }
     }
 

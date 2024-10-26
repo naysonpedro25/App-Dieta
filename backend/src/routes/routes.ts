@@ -9,6 +9,7 @@ import { UserLoginController } from "../controllers/UserLoginController";
 import { PrincipalController } from "../controllers/PrincipalController";
 import { fastifyJwt } from "@fastify/jwt";
 import fastifyCookie from "@fastify/cookie";
+import { UserRepository } from "../infra/repository/UserRepository";
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -18,7 +19,10 @@ declare module "fastify" {
     ) => Promise<void>;
   }
 }
-
+interface tokenUser{ 
+  email: string,
+  id: string
+}
 export async function routes(
   fastify: FastifyInstance,
   options: FastifyPluginOptions
@@ -29,9 +33,18 @@ export async function routes(
     "authenticate",
     async (req: FastifyRequest, res: FastifyReply) => {
       try {
-        await req.jwtVerify();
+        
+        const decoded = await req.jwtVerify() as tokenUser;
+        if (!decoded) {
+          res.status(400).send({ message: "Erro ao decodificar o accesstoken" });
+          return;
+        }
+
+        const user = UserRepository.getUserRepository().findUserById(Number(decoded.id));
+
+        req.user = user;
       } catch (err) {
-        console.log("cu" + err);
+        console.log("Erro no decorate" + err);
         res.status(400).send({ error: err });
       }
     }
@@ -57,6 +70,9 @@ export async function routes(
           weight: number;
           height: number;
           objective: string;
+          calories_goals: number;
+          calories_consumed: number;
+          calories_burned: number;
         };
       }>,
       reply: FastifyReply
@@ -83,7 +99,7 @@ export async function routes(
       }>,
       reply: FastifyReply
     ) => {
-      userRegisterController.refreshTokeHandler(request, reply);
+      userRegisterController.refreshLhTokeHandler(request, reply);
     }
   );
 
