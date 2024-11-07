@@ -1,113 +1,106 @@
 import fastify, {
-  FastifyInstance,
-  FastifyPluginOptions,
-  FastifyRequest,
-  FastifyReply,
+    FastifyInstance,
+    FastifyPluginOptions,
+    FastifyRequest,
+    FastifyReply,
 } from "fastify";
-import { UserRegisterController } from "../controllers/UserRegisterController";
-import { UserLoginController } from "../controllers/UserLoginController";
-import { PrincipalController } from "../controllers/PrincipalController";
-import { fastifyJwt } from "@fastify/jwt";
+import {UserRegisterController} from "../controllers/UserRegisterController";
+import {UserLoginController} from "../controllers/UserLoginController";
+import {PrincipalController} from "../controllers/PrincipalController";
+import {fastifyJwt} from "@fastify/jwt";
 import fastifyCookie from "@fastify/cookie";
-import { UserRepository } from "../infra/repository/UserRepository";
+import UserDTO from "../infra/DTOs/UserDTO";
+import authenticatePlugin from '../middleware/AuthenticatePlugin'
+import {AccessTokenController} from "../controllers/RefreshTokenController";
+import {config} from 'dotenv';
+config({
+    path: '.env'
+});
+
+const SECRET_KEY = process.env.JWT_SECRET?? "supersecret";
+const COOKIES_KEY = process.env.COOKIES_KEY?? "supersecret";
+
+
 
 declare module "fastify" {
-  interface FastifyInstance {
-    authenticate: (
-      request: FastifyRequest,
-      reply: FastifyReply
-    ) => Promise<void>;
-  }
+    interface FastifyInstance {
+        authenticate: (
+            request: FastifyRequest,
+            reply: FastifyReply
+        ) => Promise<void>;
+    }
 }
-interface tokenUser{ 
-  email: string,
-  id: string
+
+interface tokenUser {
+    email: string
 }
+
 export async function routes(
-  fastify: FastifyInstance,
-  options: FastifyPluginOptions
+    fastify: FastifyInstance,
+    options: FastifyPluginOptions
 ) {
-  fastify.register(fastifyJwt, { secret: "supersecret" });
-  fastify.register(fastifyCookie, { secret: "supersecret" });
-  fastify.decorate(
-    "authenticate",
-    async (req: FastifyRequest, res: FastifyReply) => {
-      try {
-        
-        const decoded = await req.jwtVerify() as tokenUser;
-        if (!decoded) {
-          res.status(400).send({ message: "Erro ao decodificar o accesstoken" });
-          return;
+
+    fastify.register(fastifyJwt, {secret: SECRET_KEY});
+    fastify.register(fastifyCookie, {secret: COOKIES_KEY});
+
+    fastify.decorate( // segurança das rotas privadas
+        "authenticate",
+        async (req: FastifyRequest, res: FastifyReply) => {
+            authenticatePlugin(req, res, fastify);
         }
+    );
 
-        const user = UserRepository.getUserRepository().findUserById(Number(decoded.id));
+    const userLoginController: UserLoginController = new UserLoginController();
+    const userRegisterController = new UserRegisterController(fastify);
 
-        req.user = user;
-      } catch (err) {
-        console.log("Erro no decorate" + err);
-        res.status(400).send({ error: err });
-      }
-    }
-  );
+    fastify.get("/", (req: FastifyRequest, reply: FastifyReply) => {
+        reply.send({ok: true, message: "route " + req.url});
+    });
 
-  const userLoginController: UserLoginController = new UserLoginController();
-  const userRegisterController = new UserRegisterController(fastify);
+    fastify.post(
+        "/register",
+        (
+            req: FastifyRequest<{
+                Body: UserDTO;
+            }>,
+            reply: FastifyReply
+        ) => {
+            userRegisterController.handler(req, reply);
+        }
+    );
 
-  fastify.get("/", (req: FastifyRequest, reply: FastifyReply) => {
-    reply.send({ ok: true, message: "route " + req.url });
-  });
+    fastify.post(
+        "/login",
+        async (
+            request: FastifyRequest<{ Body: { email: string; password: string } }>,
+            reply
+        ) => {
+            await userLoginController.handler(request, reply, fastify);
+        }
+    );
 
-  fastify.post(
-    "/register",
-    (
-      req: FastifyRequest<{
-        Body: {
-          name: string;
-          email: string;
-          password: string;
-          age: number;
-          sex: string;
-          weight: number;
-          height: number;
-          objective: string;
-          calories_goals: number;
-          calories_consumed: number;
-          calories_burned: number;
-        };
-      }>,
-      reply: FastifyReply
-    ) => {
-      userRegisterController.handler(req, reply);
-    }
-  );
+    fastify.get("/refresh-token", async (req: FastifyRequest<{ // para verificar ou
+            Body: { refreshToken: string }
+        }>, reply: FastifyReply) => {
+            await new AccessTokenController().handler(req, reply, fastify);
+        }
+    );
 
-  fastify.post(
-    "/login",
-    (
-      request: FastifyRequest<{ Body: { email: string; password: string } }>,
-      reply
-    ) => {
-      userLoginController.handler(request, reply, fastify);
-    }
-  );
+    // fastify.get('/access-token', async (req: FastifyRequest, reply: FastifyReply) => {
 
-  fastify.post(
-    "/refresh-token",
-    (
-      request: FastifyRequest<{
-        Body: { refreshToken: string };
-      }>,
-      reply: FastifyReply
-    ) => {
-      userRegisterController.refreshLhTokeHandler(request, reply);
-    }
-  );
+    // })
 
-  fastify.get(
-    "/principal",
-    { onRequest: [fastify.authenticate] },
-    (request: FastifyRequest, reply: FastifyReply) => {
-      new PrincipalController().handle(request, reply);
-    }
-  );
+
+    fastify.register(async (insance) => {
+        insance.addHook('onRequest', insance.authenticate);
+        insance.get("/principal", async (request: FastifyRequest, reply: FastifyReply) => {
+            (await new PrincipalController().handler(request, reply));
+        });
+
+        insance.get('/test', async (request: FastifyRequest, reply: FastifyReply) => {
+            reply.send("sexo");
+        })
+    });
+
+
 }

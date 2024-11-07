@@ -1,7 +1,8 @@
 import { PrismaClient, User} from "@prisma/client"
-import { getPrismaInstance } from "../../PrismaSingleton";
-
+import { getPrismaInstance } from "../PrismaInstance";
+import UserDTO from '../DTOs/UserDTO'
 export class UserRepository{
+
     private db : PrismaClient = getPrismaInstance();
     static userRepositorySingleton: UserRepository;
     
@@ -10,8 +11,8 @@ export class UserRepository{
         return this.userRepositorySingleton;
     }
     
-    async createUser(dataUser : User): Promise<User> {
-        return (await this.db.user.create({ data: dataUser }));
+    async createUser(user:UserDTO ): Promise<User | null > {
+        return (await this.db.user.create({ data: (user as User) })) ;
     }
 
     async findUserByEmail(email: string): Promise<User | null >{

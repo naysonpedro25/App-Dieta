@@ -1,31 +1,28 @@
-import IUser from '../entity/UserInterface'
-import {User} from '@prisma/client'
-import {UserRepository} from '../repository/UserRepository'
+import UserDTO from "../DTOs/UserDTO";
+import { User } from "@prisma/client";
+import { UserRepository } from "../repository/UserRepository";
 
 export class UserService {
+  repo: UserRepository;
 
-    repo: UserRepository;
+  constructor() {
+    this.repo = UserRepository.getUserRepository();
+  }
 
-    constructor() {
-
-        this.repo = UserRepository.getUserRepository();
+  async create(user: UserDTO): Promise<User | null | undefined> {
+    try {
+      return (await this.repo.createUser(user));
+    } catch (err) {
+      console.log(err);
     }
+  }
 
-    async create(user: IUser): Promise<IUser | null | undefined> {
-        try {
-            return await this.repo.createUser(user as User)
-        } catch (err) {
-            console.log(err);
-        }
+
+  async findUserByEmail(email: string): Promise<User | null | undefined> {
+    try {
+      return (await this.repo.findUserByEmail(email));
+    } catch (err) {
+      console.log(err);
     }
-
-    async findUserByEmail(email: string): Promise<IUser | null | undefined> {
-        try {
-            return this.repo.findUserByEmail(email);
-        } catch (err) {
-            console.log(err);
-        }
-    }
-
-
+  }
 }

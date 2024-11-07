@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h2>hello</h2>
+    <ul class="listausername"></ul>
+    <script>
+    
+    const lista = document.querySelector(".listausername");
+      async function mostrarUsers() {
+        let token = localStorage.getItem("accessToken");
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (!token || !refreshToken) {
+          console.log("Access token n enctrotado");
+          return;
+        }
+        try {
+          const response = await fetch("http://127.0.0.1:3000/test", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`,
+            },
+          })
+          if (!response.ok) {
+            console.log("eerrorororororoor");
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          // const users = await response.json();
+          // users.forEach((user) => {
+          //   const li = document.createElement("li");
+          //   li.innerText = user.name;
+          //   lista.appendChild(li);
+          // });
+
+          const text = await response.json();
+          console.log(text);  
+        } catch (error) {
+          console.error("Error  fvfvfvfv:", error);
+        }
+      }
+      mostrarUsers();
+    </script>
+  </body>
+</html>

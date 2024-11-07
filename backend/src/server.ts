@@ -1,6 +1,6 @@
 import Fastify from "fastify";
 import { routes } from "./routes/routes.js";
-import { fastifyJwt } from "@fastify/jwt";
+
 import cors from "@fastify/cors";
 
 const app = Fastify({ logger: true });
@@ -10,7 +10,7 @@ app.setErrorHandler((error, reques, reply) => {
   reply.status(400).send({ ok: false });
 });
 
-app.register(cors, { origin: "*" });
+app.register(cors, {origin : 'http://localhost:5173' , credentials: true});
 (async () => {
   app.register(routes);
 

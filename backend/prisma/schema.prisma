@@ -14,27 +14,27 @@ datasource db {
 }
 
 model User {
-  id        BigInt    @id @default(autoincrement())
-  createdAt DateTime  @default(now())
-  name      String    @db.VarChar(255)
-  sex       Sex
-  age       Int
-  objective Objective
-  height    Float
-  weight    Float
-  password  String    @db.VarChar(255)
-  email     String    @unique @db.VarChar(255)
-  updatedAt DateTime  @updatedAt
-  calories_goals Float
+  id                Int       @id @default(autoincrement())
+  createdAt         DateTime  @default(now())
+  name              String    @db.VarChar(255)
+  sex               Sex
+  age               Int
+  objective         Objective
+  height            Float
+  weight            Float
+  password          String    @db.VarChar(255)
+  email             String    @unique @db.VarChar(255)
+  updatedAt         DateTime  @updatedAt
+  calories_goals    Float
   calories_consumed Float
-  calories_burned Float
-  meals     Meal[]
+  calories_burned   Float
+  meals             Meal[]
 }
 
 model Meal {
   id       Int      @id @default(autoincrement())
   user     User     @relation(fields: [userId], references: [id])
-  userId   BigInt
+  userId   Int
   name     String // Nome da refeição, ex: "Café da manhã"
   calories Float
   date     DateTime @default(now())

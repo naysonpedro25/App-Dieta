@@ -1,5 +1,5 @@
 import {PrismaClient, Food} from "@prisma/client";
-import {getPrismaInstance} from "../../PrismaSingleton";
+import {getPrismaInstance} from "../PrismaInstance";
 
 export class FoodRepository {
     private static foodRepository: FoodRepository;
