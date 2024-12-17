@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.main-bg {
+  background-color: #0f232c;
+}
+
+.btn-bg {
+  background-color: #009ad6;
+}
+
+.text-logo-color {
+  color: #74bc1e;
+}
+
+.img-flutuation {
+    animation: flutuar 3s ease-in-out infinite;
+}
+
+@keyframes flutuar {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}

@@ -1,17 +1,19 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {UserRepository} from '../infra/repository/UserRepository'
-import {User} from "@prisma/client"
+import UserDTO from "../infra/DTOs/UserDTO";
+
 
 export class PrincipalController {
     async handler(request: FastifyRequest, reply: FastifyReply ) {
         try {
-            const users = await new UserRepository().getAllUsers();
-            const formattedUsers = users.map(user => {
-                return { ...user, id: user.id.toString() };
-            });
-            return reply.send(formattedUsers);
+            // const users = (await new UserRepository().getAllUsers()).map((user)=>{
+            //     const {} = user;
+            //     return newUser;
+            // });
+
+            // return reply.send(users);
         }catch (error) {
-            reply.status(401).send({ error: 'Unauthorized cu' });
+            reply.status(401).send({ error});
         }
     }
 

@@ -14,43 +14,60 @@ datasource db {
 }
 
 model User {
-  id                Int       @id @default(autoincrement())
-  createdAt         DateTime  @default(now())
-  name              String    @db.VarChar(255)
-  sex               Sex
-  age               Int
-  objective         Objective
-  height            Float
-  weight            Float
-  password          String    @db.VarChar(255)
-  email             String    @unique @db.VarChar(255)
-  updatedAt         DateTime  @updatedAt
-  calories_goals    Float
-  calories_consumed Float
-  calories_burned   Float
-  meals             Meal[]
+  id             Int            @id @default(autoincrement())
+  createdAt      DateTime       @default(now())
+  name           String         @db.VarChar(255)
+  sex            Sex
+  age            Int
+  objective      Objective
+  height         Float
+  weight         Float
+  password       String         @db.VarChar(255)
+  email          String         @unique @db.VarChar(255)
+  updatedAt      DateTime       @updatedAt
+  calories_goals Float
+  meals          Meal[]
+  dailyCalories  DailyCalories?
 }
 
 model Meal {
-  id       Int      @id @default(autoincrement())
-  user     User     @relation(fields: [userId], references: [id])
+  id       Int        @id @default(autoincrement())
+  user     User       @relation(fields: [userId], references: [id])
   userId   Int
-  name     String // Nome da refeição, ex: "Café da manhã"
+  name     String
   calories Float
-  date     DateTime @default(now())
-  foods    Food[] // Relacionamento com alimentos consumidos
+  date     DateTime   @default(now())
+  foods    MealFood[]
 }
 
 model Food {
-  id            BigInt   @id @default(autoincrement())
-  Meal          Meal?    @relation(fields: [mealId], references: [id])
-  mealId        Int?
-  name          String   @db.VarChar(255)
+  id            Int        @id @default(autoincrement())
+  meals         MealFood[]
+  name          String     @db.VarChar(255)
   calories      Float
   carbohydrates Float
   proteins      Float
   fats          Float
-  createdAt     DateTime @default(now())
+  createdAt     DateTime   @default(now())
+}
+
+model MealFood {
+  foodId Int
+  mealId Int
+
+  meal Meal @relation(fields: [mealId], references: [id])
+  Food Food @relation(fields: [foodId], references: [id])
+
+  @@id([mealId, foodId]) // chave composta
+}
+
+model DailyCalories {
+  id                Int      @id @default(autoincrement())
+  calories_consumed Float
+  calories_burned   Float
+  date              DateTime
+  user              User     @relation(fields: [userId], references: [id])
+  userId            Int      @unique
 }
 
 enum Sex {

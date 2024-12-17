@@ -1,28 +1,48 @@
 import UserDTO from "../DTOs/UserDTO";
-import { User } from "@prisma/client";
-import { UserRepository } from "../repository/UserRepository";
+import {DailyCalories, User} from "@prisma/client";
+import {UserRepository} from "../repository/UserRepository";
+import {DailyCaloriesDTO} from "../DTOs/DailyCaloriesDTO";
+import { hash, genSalt, compare } from "bcrypt"
+
 
 export class UserService {
-  repo: UserRepository;
+    repo: UserRepository;
 
-  constructor() {
-    this.repo = UserRepository.getUserRepository();
-  }
-
-  async create(user: UserDTO): Promise<User | null | undefined> {
-    try {
-      return (await this.repo.createUser(user));
-    } catch (err) {
-      console.log(err);
+    constructor() {
+        this.repo = UserRepository.getUserRepository();
     }
-  }
 
+    async create(user: UserDTO, hashPassword: string): Promise<UserDTO | undefined> {
+        try {
 
-  async findUserByEmail(email: string): Promise<User | null | undefined> {
-    try {
-      return (await this.repo.findUserByEmail(email));
-    } catch (err) {
-      console.log(err);
+            const userdb = await this.repo.createUser({password: hashPassword, ...user} as User);
+
+            const dto = {
+                ...userdb,
+                dailyCalories: userdb?.dailyCalories,
+            };
+            const {createdAt, updatedAt, password, ...userReturn} = dto;
+            return userReturn as UserDTO;
+        } catch (err) {
+            console.log("Create user service : ", err);
+        }
+
     }
-  }
+
+
+    async findUserByEmail(email: string): Promise<{userDto: UserDTO | undefined, passwordHashed?: string} | undefined> {
+        try {
+            const userdb = (await this.repo.findUserByEmail(email));
+
+            const dto = {
+                ...userdb,
+                dailyCalories: userdb?.dailyCalories,
+            };
+            const {createdAt, updatedAt, password, ...userReturn} = dto;
+
+            return {userDto: userReturn as UserDTO, passwordHashed: password};
+        } catch (err) {
+            console.log(err);
+        }
+    }
 }

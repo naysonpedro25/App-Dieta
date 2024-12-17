@@ -10,7 +10,7 @@ app.setErrorHandler((error, reques, reply) => {
   reply.status(400).send({ ok: false });
 });
 
-app.register(cors, {origin : 'http://localhost:5173' , credentials: true});
+app.register(cors,{origin: true  ,credentials: true});
 (async () => {
   app.register(routes);
 

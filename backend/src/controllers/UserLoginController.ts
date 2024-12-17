@@ -13,27 +13,29 @@ export class UserLoginController {
         try {
 
             const { email, password } = req.body;
-            const user = await this.userService.findUserByEmail(email);
+            const userService = (await this.userService.findUserByEmail(email));
+            if (!userService || !userService.userDto || !userService.passwordHashed) {
+                return res.status(400).send({ message: 'Invalid email or password' });
+            }
+
+            const {userDto, passwordHashed} = userService;
 
 
-            if (!user) return res.status(400).send({ message: 'Invalid email or password' });
-
-            const salt = await genSalt(10);
-            const hashPassword = await hash(password, salt);
+            // const hashPassword = await hash(password, salt);
 
 
-            if (!(await compare(password, user.password))) {return res.status(401).send({ message: 'Invalid password' })};
+            if (!(await compare(password, passwordHashed))) {return res.status(401).send({ message: 'Invalid password' })};
 
-            const userDto = user as UserDTO;
-            const accessToken = fastify.jwt.sign( payloadGen(userDto,(60 * 2)), { expiresIn: '2m' });
-            const refreshToken = fastify.jwt.sign(payloadGen(userDto, 7 *24 * 60 * 60 ), { expiresIn: '7d' });
-            return res
-                .setCookie("refreshToken", refreshToken, {
-                    httpOnly: true,
-                    secure: true,
-                    sameSite: "strict",
-                    maxAge: 7 * 24 * 60 * 60,
-                }).status(201).send({ message: "Login successfully", accessToken,user : userDto });
+
+
+            const accessToken = fastify.jwt.sign(payloadGen(userDto, 7*24*60*60)?? {}, { expiresIn: '7d' });
+            return res.setCookie("accessToken", accessToken, {
+                httpOnly: true,
+                maxAge: 7 * 24 * 60 * 60,
+                sameSite: "strict",
+                secure: true
+
+            }).status(201).send({ message: "Login successfully" , user : userDto });
 
         } catch (error) {
             console.log("User login error : " , error);

@@ -1,13 +1,18 @@
-export default interface UserDTO {
+import {Sex, Objective, User} from "@prisma/client";
+import {DailyCaloriesDTO} from "./DailyCaloriesDTO";
+
+ type UserDTO = Omit<User, | "createdAt" | "updatedAt" | "password">
+export  interface UserDTOObsol {
+    id?: number;
     name: string;
     email: string;
     age: number;
-    sex: string;
-    password: string;
+    sex: Sex;
     weight: number;
     height: number;
-    objective: string;
+    objective:Objective;
     calories_goals: number;
-    calories_consumed: number;
-    calories_burned: number;
+    dailyCalories: DailyCaloriesDTO | null;
 }
+
+export default UserDTO;
